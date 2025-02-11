@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>南江县农业领域安全检查智能填报系统</title>
+    <!-- 引入 Bootstrap CSS -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 Signature Pad -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background-color: #f8f9fa; 
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 700;
+        }
+
+        .check-object-tags .tag {
+            transition: all 0.3s ease;
+            border: 2px solid var(--primary-color);
+        }
+
+        .tag.active {
+            background: var(--primary-color);
+            color: white !important;
+        }
+
+        .accordion-header {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            cursor: pointer;
+            border-radius: 8px !important;
+        }
+
+        .submit-btn {
+            background: var(--primary-color);
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            background: var(--secondary-color);
+        }
+
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .signature-container {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>南江县农业领域安全检查智能填报系统</h1>
+
+        <!-- 基础信息 -->
+        <div class="form-section">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label required">检查时间</label>
+                    <input type="date" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">被检查对象</label>
+                    <input type="text" class="form-control" placeholder="请输入名称" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">检查人员</label>
+                    <input type="text" class="form-control" placeholder="请输入姓名" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- 检查对象 -->
+        <div class="form-section">
+            <label class="form-label required mb-3">检查对象（可多选）</label>
+            <div class="check-object-tags d-flex flex-wrap gap-2">
+                <div class="tag" data-id="aquaculture">水产养殖场</div>
+                <div class="tag" data-id="grain-drying">粮食烘干点</div>
+                <div class="tag" data-id="machinery">农机库房</div>
+                <div class="tag" data-id="oil-storage">油库（含油料存放点）</div>
+                <div class="tag" data-id="tractor">拖拉机、联合收割机</div>
+                <div class="tag" data-id="irrigation">农机提灌站</div>
+                <div class="tag" data-id="pesticide">农药肥料经营环节</div>
+                <div class="tag" data-id="pesticide-usage">农药肥料使用环节</div>
+                <div class="tag" data-id="livestock">畜禽养殖场</div>
+                <div class="tag" data-id="meat-processing">畜禽屠宰企业</div>
+                <div class="tag" data-id="biogas">户用沼气池</div>
+                <div class="tag" data-id="biogas-project">沼气工程安全检查</div>
+                <div class="tag" data-id="facilities">设施农业领域</div>
+                <div class="tag" data-id="agriculture-construction">农业工程建设</div>
+                <div class="tag" data-id="leisure-agriculture">休闲农业</div>
+                <div class="tag" data-id="cold-storage">农产品冷藏保鲜设施安全检查</div>
+            </div>
+        </div>
+
+        <!-- 照片上传 -->
+        <div class="form-section">
+            <label class="form-label">现场照片（最多6张）</label>
+            <div class="input-group">
+                <input type="file" class="form-control" id="photoUpload" accept="image/*" multiple>
+                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('photoUpload').click()">
+                    选择文件
+                </button>
+            </div>
+            <div class="photo-preview mt-3"></div>
+        </div>
+
+        <!-- 电子签名 -->
+        <div class="form-section">
+            <label class="form-label required">电子签名</label>
+            <div class="signature-container p-3">
+                <canvas id="signatureCanvas" width="400" height="200" style="touch-action: none;"></canvas>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="signaturePad.clear()">清除签名</button>
+                </div>
+            </div>
+        </div>
+
+      
+        <!-- 检查模块 -->
+        <div class="accordion" id="aquaculture">
+            <div class="accordion-header">
+                <h3>水产养殖安全检查</h3>
+            </div>
+            <div class="accordion-content">
+                <table class="check-table">
+                    <tr>
+                        <th style="width:60%">检查内容</th>
+                        <th>是</th>
+                        <th>否</th>
+                        <th>不涉及</th>
+                    </tr>
+                    <tr>
+                        <td>养殖企业是否落实安全生产责任</td>
+                        <td><input type="radio" name="aqua1" value="是"></td>
+                        <td><input type="radio" name="aqua1" value="否"></td>
+                        <td><input type="radio" name="aqua1" value="不涉及"></td>
+                    </tr>
+                <tr>
+                    <td>养殖企业是否建立生产操作规程</td>
+                    <td><input type="radio" name="aqua2" value="是"></td>
+                    <td><input type="radio" name="aqua2" value="否"></td>
+                    <td><input type="radio" name="aqua2" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>渔场养殖证或营业执照以及国家法律法规规定的其它应具备的资质证明等是否完备有效</td>
+                    <td><input type="radio" name="aqua3" value="是"></td>
+                    <td><input type="radio" name="aqua3" value="否"></td>
+                    <td><input type="radio" name="aqua3" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>渔场的水产品、采购的苗种、饲料、渔药等是否来源于合法生产企业（查验相关票据和证明材料）</td>
+                    <td><input type="radio" name="aqua4" value="是"></td>
+                    <td><input type="radio" name="aqua4" value="否"></td>
+                    <td><input type="radio" name="aqua4" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>是否存放和使用过期变质饲料、违禁药物及违法添加其它有毒有害物质</td>
+                    <td><input type="radio" name="aqua5" value="是"></td>
+                    <td><input type="radio" name="aqua5" value="否"></td>
+                    <td><input type="radio" name="aqua5" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>是否规范保存、完整填写生产、用药和销售“三项记录”</td>
+                    <td><input type="radio" name="aqua6" value="是"></td>
+                    <td><input type="radio" name="aqua6" value="否"></td>
+                    <td><input type="radio" name="aqua6" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>养殖池的结构是否完好，池壁、沟渠是否有渗漏、裂缝等问题</td>
+                    <td><input type="radio" name="aqua7" value="是"></td>
+                    <td><input type="radio" name="aqua7" value="否"></td>
+                    <td><input type="radio" name="aqua7" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>消防设备和救生设施是否按规定配备并有效</td>
+                    <td><input type="radio" name="aqua8" value="是"></td>
+                    <td><input type="radio" name="aqua8" value="否"></td>
+                    <td><input type="radio" name="aqua8" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>是否悬挂安全标语、设置安全警示牌</td>
+                    <td><input type="radio" name="aqua9" value="是"></td>
+                    <td><input type="radio" name="aqua9" value="否"></td>
+                    <td><input type="radio" name="aqua9" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>临水作业是否正确佩戴救生衣、不存在酒后上船现象</td>
+                    <td><input type="radio" name="aqua10" value="是"></td>
+                    <td><input type="radio" name="aqua10" value="否"></td>
+                    <td><input type="radio" name="aqua10" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>渔业生产单位电力、渔机以及场内生产用电、生产机械、消防设施、船舶、生产水域周边安全等设施是否存在安全隐患</td>
+                    <td><input type="radio" name="aqua11" value="是"></td>
+                    <td><input type="radio" name="aqua11" value="否"></td>
+                    <td><input type="radio" name="aqua11" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>安全生产重要设施是否按规定要求及时进行日常管理维护</td>
+                    <td><input type="radio" name="aqua12" value="是"></td>
+                    <td><input type="radio" name="aqua12" value="否"></td>
+                    <td><input type="radio" name="aqua12" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>是否安全使用易燃易爆物品并规范存放保管</td>
+                    <td><input type="radio" name="aqua13" value="是"></td>
+                    <td><input type="radio" name="aqua13" value="否"></td>
+                    <td><input type="radio" name="aqua13" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>病死水生动物是否无害化处理</td>
+                    <td><input type="radio" name="aqua14" value="是"></td>
+                    <td><input type="radio" name="aqua14" value="否"></td>
+                    <td><input type="radio" name="aqua14" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>渔业生产单位是否建立灾害预警、安全应急预案、灾害天气避险操作规程</td>
+                    <td><input type="radio" name="aqua15" value="是"></td>
+                    <td><input type="radio" name="aqua15" value="否"></td>
+                    <td><input type="radio" name="aqua15" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>是否组织职工开展防火、防盗、用水、用电、用气安全常识教育</td>
+                    <td><input type="radio" name="aqua16" value="是"></td>
+                    <td><input type="radio" name="aqua16" value="否"></td>
+                    <td><input type="radio" name="aqua16" value="不涉及"></td>
+                </tr>
+                <tr>
+                    <td>是否规范开展有限空间作业（配齐有限空间作业防护设备，做好从业人员培训和技术交底、加强作业过程管控，作业必须先审批同意后，做到“先通风、再检测、后作业”，严禁通风、检测不合格作业）</td>
+                    <td><input type="radio" name="aqua17" value="是"></td>
+                    <td><input type="radio" name="aqua17" value="否"></td>
+                    <td><input type="radio" name="aqua17" value="不涉及"></td>
+            </table>
+        </div>
+    </div>
+
+ <div class="accordion" id="grain-drying">
+    <div class="accordion-header">
+        <h3>粮食烘干点安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>粮食烘干点操作人员是否经过培训上岗</td>
+                <td><input type="radio" name="dry1" value="是"></td>
+                <td><input type="radio" name="dry1" value="否"></td>
+                <td><input type="radio" name="dry1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>烘干现场的消防器材数量、种类和烘干能力是否相适应</td>
+                <td><input type="radio" name="dry2" value="是"></td>
+                <td><input type="radio" name="dry2" value="否"></td>
+                <td><input type="radio" name="dry2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>烘干场所是否存放易燃易爆物品</td>
+                <td><input type="radio" name="dry3" value="是"></td>
+                <td><input type="radio" name="dry3" value="否"></td>
+                <td><input type="radio" name="dry3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>烘干机是否定期进行检查、保养</td>
+                <td><input type="radio" name="dry4" value="是"></td>
+                <td><input type="radio" name="dry4" value="否"></td>
+                <td><input type="radio" name="dry4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>烘干机运作期间是否实行24小时值守制度</td>
+                <td><input type="radio" name="dry5" value="是"></td>
+                <td><input type="radio" name="dry5" value="否"></td>
+                <td><input type="radio" name="dry5" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="machinery">
+    <div class="accordion-header">
+        <h3>农机库房安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>农机库房环境是否良好</td>
+                <td><input type="radio" name="machinery1" value="是"></td>
+                <td><input type="radio" name="machinery1" value="否"></td>
+                <td><input type="radio" name="machinery1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机库房内是否存放易燃易爆物品</td>
+                <td><input type="radio" name="machinery2" value="是"></td>
+                <td><input type="radio" name="machinery2" value="否"></td>
+                <td><input type="radio" name="machinery2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机库房是否配备消防设施设备</td>
+                <td><input type="radio" name="machinery3" value="是"></td>
+                <td><input type="radio" name="machinery3" value="否"></td>
+                <td><input type="radio" name="machinery3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机库房配备的消防器材数量、型号与库房的建筑面积和存放的物品是否适应</td>
+                <td><input type="radio" name="machinery4" value="是"></td>
+                <td><input type="radio" name="machinery4" value="否"></td>
+                <td><input type="radio" name="machinery4”value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机库房电器设施是否存在安全隐患</td>
+                <td><input type="radio" name="machinery5" value="是"></td>
+                <td><input type="radio" name="machinery5" value="否"></td>
+                <td><input type="radio" name="machinery5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机库房防盗措施是否良好</td>
+                <td><input type="radio" name="machinery6" value="是"></td>
+                <td><input type="radio" name="machinery6" value="否"></td>
+                <td><input type="radio" name="machinery6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机库房农业机械（含挂车、配套农具）安全设施是否齐全有效</td>
+                <td><input type="radio" name="machinery7" value="是"></td>
+                <td><input type="radio" name="machinery7" value="否"></td>
+                <td><input type="radio" name="machinery7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机库房农业机械是否维护保养</td>
+                <td><input type="radio" name="machinery8" value="是"></td>
+                <td><input type="radio" name="machinery8" value="否"></td>
+                <td><input type="radio" name="machinery8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机安全生产责任制度是否建立并公示，明确安全生产责任并执行</td>
+                <td><input type="radio" name="machinery9" value="是"></td>
+                <td><input type="radio" name="machinery9" value="否"></td>
+                <td><input type="radio" name="machinery9" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机驾驶人安全责任是否落实</td>
+                <td><input type="radio" name="machinery10" value="是"></td>
+                <td><input type="radio" name="machinery10" value="否"></td>
+                <td><input type="radio" name="machinery10" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农机驾驶人安全教育是否开展</td>
+                <td><input type="radio" name="machinery11" value="是"></td>
+                <td><input type="radio" name="machinery11" value="否"></td>
+                <td><input type="radio" name="machinery11" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="oil-storage">
+    <div class="accordion-header">
+        <h3>油库（含油料存放点）安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>油库（含油料存放点）是否有消防设施</td>
+                <td><input type="radio" name="oil1" value="是"></td>
+                <td><input type="radio" name="oil1" value="否"></td>
+                <td><input type="radio" name="oil1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库（含油料存放点）消防器材数量、种类和摆放位置与油库是否适应</td>
+                <td><input type="radio" name="oil2" value="是"></td>
+                <td><input type="radio" name="oil2" value="否"></td>
+                <td><input type="radio" name="oil2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库（含油料存放点）灭火器是否有效</td>
+               <td><input type="radio" name="oil3" value="是"></td>
+                <td><input type="radio" name="oil3" value="否"></td>
+                <td><input type="radio" name="oil3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库（含油料存放点）油作物是否混放</td>
+                <td><input type="radio" name="oil4" value="是"></td>
+                <td><input type="radio" name="oil4" value="否"></td>
+                <td><input type="radio" name="oil4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库（含油料存放点）有防雷、防静电装置</td>
+                <td><input type="radio" name="oil5" value="是"></td>
+                <td><input type="radio" name="oil5" value="否"></td>
+                <td><input type="radio" name="oil5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库内照明、电路开关是否符合要求</td>
+                <td><input type="radio" name="oil6" value="是"></td>
+                <td><input type="radio" name="oil6" value="否"></td>
+                <td><input type="radio" name="oil6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库通风条件是否符合要求</td>
+                <td><input type="radio" name="oil7" value="是"></td>
+                <td><input type="radio" name="oil7" value="否"></td>
+                <td><input type="radio" name="oil7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库周围是否悬挂警示标志</td>
+                <td><input type="radio" name="oil8" value="是"></td>
+                <td><input type="radio" name="oil8" value="否"></td>
+                <td><input type="radio" name="oil8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>油库周围是否有安全隐患</td>
+                <td><input type="radio" name="oil9" value="是"></td>
+                <td><input type="radio" name="oil9" value="否"></td>
+                <td><input type="radio" name="oil9" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="tractor">
+    <div class="accordion-header">
+        <h3>拖拉机、联合收割机安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>拖拉机、联合收割机是否经注册登记后上路行驶</td>
+                <td><input type="radio" name="tractor1" value="是"></td>
+                <td><input type="radio" name="tractor1" value="否"></td>
+                <td><input type="radio" name="tractor1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>拖拉机、联合收割机是否进行年度检验</td>
+                <td><input type="radio" name="tractor2" value="是"></td>
+                <td><input type="radio" name="tractor2" value="否"></td>
+                <td><input type="radio" name="tractor2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>拖拉机、联合收割机是否非法改装</td>
+                <td><input type="radio" name="tractor3" value="是"></td>
+                <td><input type="radio" name="tractor3" value="否"></td>
+                <td><input type="radio" name="tractor3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>拖拉机、联合收割机操作人员是否持有操作证件驾驶</td>
+                <td><input type="radio" name="tractor4" value="是"></td>
+                <td><input type="radio" name="tractor4" value="否"></td>
+                <td><input type="radio" name="tractor4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>拖拉机、联合收割机操作人员持有的操作证件是否与驾驶准驾车型相符</td>
+                <td><input type="radio" name="tractor5" value="是"></td>
+                <td><input type="radio" name="tractor5" value="否"></td>
+                <td><input type="radio" name="tractor5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>拖拉机、联合收割机是否违法载人</td>
+                <td><input type="radio" name="tractor6" value="是"></td>
+                <td><input type="radio" name="tractor6" value="否"></td>
+                <td><input type="radio" name="tractor6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>驾驶员应严禁酒后驾驶，是否存在酒后驾驶的情况</td>
+                <td><input type="radio" name="tractor7" value="是"></td>
+                <td><input type="radio" name="tractor7" value="否"></td>
+                <td><input type="radio" name="tractor7" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="irrigation">
+    <div class="accordion-header">
+        <h3>农机提灌站安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>检查提灌站的机房建设是否符合安全标准，设备安装是否稳固，管道连接是否紧密，高压线路安装是否规范</td>
+                <td><input type="radio" name="irrigation1" value="是"></td>
+                <td><input type="radio" name="irrigation1" value="否"></td>
+                <td><input type="radio" name="irrigation1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>检查提灌设备的运行状态是否能正常运行</td>
+                <td><input type="radio" name="irrigation2" value="是"></td>
+                <td><input type="radio" name="irrigation2" value="否"></td>
+                <td><input type="radio" name="irrigation2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>提灌站的安全防护装置是否完好，安全警示标志和夜间反光标识是否清晰可见</td>
+                <td><input type="radio" name="irrigation3" value="是"></td>
+                <td><input type="radio" name="irrigation3" value="否"></td>
+                <td><input type="radio" name="irrigation3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>操作人员是否持有有效证件，是否经过专业培训</td>
+                <td><input type="radio" name="irrigation4" value="是"></td>
+                <td><input type="radio" name="irrigation4" value="否"></td>
+                <td><input type="radio" name="irrigation4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>提灌站是否有应急预案，并定期进行应急演练</td>
+                <td><input type="radio" name="irrigation5" value="是"></td>
+                <td><input type="radio" name="irrigation5" value="否"></td>
+                <td><input type="radio" name="irrigation5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>提灌站是否定期维护和保养</td>
+                <td><input type="radio" name="irrigation6" value="是"></td>
+                <td><input type="radio" name="irrigation6" value="否"></td>
+                 <td><input type="radio" name="irrigation6" value="不涉及"></td>
+                <td>周围的环境是否对提灌站带来安全隐患，如水源、土壤等</td>
+                <td><input type="radio" name="irrigation7" value="是"></td>
+                <td><input type="radio" name="irrigation7" value="否"></td>
+                <td><input type="radio" name="irrigation7" value="不涉及"></td>
+             </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="pesticide">
+    <div class="accordion-header">
+        <h3>农药肥料经营环节</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>是否办理农药经营许可证</td>
+                <td><input type="radio" name="pesticide1" value="是"></td>
+                <td><input type="radio" name="pesticide1" value="否"></td>
+                <td><input type="radio" name="pesticide1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否超范围经营农药</td>
+                <td><input type="radio" name="pesticide2" value="是"></td>
+                <td><input type="radio" name="pesticide2" value="否"></td>
+                <td><input type="radio" name="pesticide2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否经营违禁农药</td>
+                <td><input type="radio" name="pesticide3" value="是"></td>
+                <td><input type="radio" name="pesticide3" value="否"></td>
+                <td><input type="radio" name="pesticide3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否建立购销台账</td>
+                <td><input type="radio" name="pesticide4" value="是"></td>
+                <td><input type="radio" name="pesticide4" value="否"></td>
+                <td><input type="radio" name="pesticide4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否落实实名制购买制度</td>
+                <td><input type="radio" name="pesticide5" value="是"></td>
+                <td><input type="radio" name="pesticide5" value="否"></td>
+                <td><input type="radio" name="pesticide5" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="pesticide">
+    <div class="accordion-header">
+        <h3>农药肥料经营环节检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>农药经营企业是否办理农药经营许可证</td>
+                <td><input type="radio" name="pesticide1" value="是"></td>
+                <td><input type="radio" name="pesticide1" value="否"></td>
+                <td><input type="radio" name="pesticide1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药、肥料经营企业是否超范围经营</td>
+                <td><input type="radio" name="pesticide2" value="是"></td>
+                <td><input type="radio" name="pesticide2" value="否"></td>
+                <td><input type="radio”name="pesticide2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药经营企业是否还存在违法经营百草枯、毒鼠强等高毒违禁农药</td>
+                <td><input type="radio" name="pesticide3" value="是"></td>
+                <td><input type="radio" name="pesticide3" value="否"></td>
+                <td><input type="radio" name="pesticide3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药、肥料经营企业经营场所与仓储场所是否与农药经营许可证中标注的地址相符</td>
+                <td><input type="radio" name="pesticide4" value="是"></td>
+                <td><input type="radio" name="pesticide4" value="否"></td>
+                <td><input type="radio" name="pesticide4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药、肥料经营企业是否落实相应经营管理制度</td>
+                <td><input type="radio" name="pesticide5" value="是"></td>
+                <td><input type="radio" name="pesticide5" value="否"></td>
+                <td><input type="radio" name="pesticide5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药、肥料经营企业是否有消防安全防护和通风设施</td>
+                <td><input type="radio" name="pesticide6" value="是"></td>
+                <td><input type="radio" name="pesticide6" value="否"></td>
+                <td><input type="radio" name="pesticide6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药、肥料经营企业是否对采购的农药（肥料）进行检验，并保留合法的票据</td>
+                <td><input type="radio" name="pesticide7" value="是"></td>
+                <td><input type="radio" name="pesticide7" value="否"></td>
+                <td><input type="radio" name="pesticide7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药、肥料经营企业是否建立购销货台账并记录齐全</td>
+                <td><input type="radio" name="pesticide8" value="是"></td>
+                <td><input type="radio" name="pesticide8" value="否"></td>
+                <td><input type="radio" name="pesticide8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>肥料经营企业是否销售超过有效期或保质期的微生物肥料</td>
+                <td><input type="radio" name="pesticide9" value="是"></td>
+                <td><input type="radio" name="pesticide9" value="否"></td>
+                <td><input type="radio" name="pesticide9" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>限用农药定点经营企业是否为农药使用者提供用药指导、落实专柜销售，实名购药</td>
+                <td><input type="radio" name="pesticide10" value="是"></td>
+                <td><input type="radio" name="pesticide10" value="否"></td>
+                <td><input type="radio" name="pesticide10" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="pesticide-usage">
+    <div class="accordion-header">
+        <h3>农药肥料使用环节检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>农药肥料是否通过正规渠道购买、质量是否合格</td>
+                <td><input type="radio" name="pesticide1" value="是"></td>
+                <td><input type="radio" name="pesticide1" value="否"></td>
+                <td><input type="radio" name="pesticide1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药使用是否建立用药记录并保存2年以上</td>
+                <td><input type="radio" name="pesticide2" value="是"></td>
+                <td><input type="radio" name="pesticide2" value="否"></td>
+                <td><input type="radio" name="pesticide2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药肥料是否按照标签标注使用</td>
+                <td><input type="radio" name="pesticide3" value="是"></td>
+                <td><input type="radio" name="pesticide3" value="否"></td>
+                <td><input type="radio" name="pesticide3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否使用国家禁止使用农药或随意超范围使用限用农药</td>
+                <td><input type="radio" name="pesticide4" value="是"></td>
+                <td><input type="radio" name="pesticide4" value="否"></td>
+                <td><input type="radio" name="pesticide4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>农药肥料废弃物是否妥善收集并按规定处理</td>
+                <td><input type="radio" name="pesticide5" value="是"></td>
+                <td><input type="radio" name="pesticide5" value="否"></td>
+                <td><input type="radio" name="pesticide5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否对农药施药人员进行安全培训</td>
+                <td><input type="radio" name="pesticide6" value="是"></td>
+                <td><input type="radio" name="pesticide6" value="否"></td>
+                <td><input type="radio" name="pesticide6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否使用防护装备（如口罩、手套、防护服等）进行农药施用</td>
+                <td><input type="radio" name="pesticide7" value="是"></td>
+                <td><input type="radio" name="pesticide7" value="否"></td>
+                <td><input type="radio" name="pesticide7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否在施药区域设置警示标志</td>
+                <td><input type="radio" name="pesticide8" value="是"></td>
+                <td><input type="radio" name="pesticide8" value="否"></td>
+                <td><input type="radio" name="pesticide8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否避免在风力较大或雨天施用农药</td>
+                <td><input type="radio" name="pesticide9" value="是"></td>
+                <td><input type="radio" name="pesticide9" value="否"></td>
+                <td><input type="radio" name="pesticide9" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否对农药残留进行定期检测</td>
+                <td><input type="radio" name="pesticide10" value="是"></td>
+                <td><input type="radio" name="pesticide10" value="否"></td>
+                <td><input type="radio" name="pesticide10" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="livestock">
+    <div class="accordion-header">
+        <h3>畜禽养殖场安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>养殖场安全生产管理制度是否建立并执行</td>
+                <td><input type="radio" name="livestock1" value="是"></td>
+                <td><input type="radio" name="livestock1" value="否"></td>
+               <td><input type="radio" name="livestock1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>养殖场是否开展安全培训（员工安全生产教育和应急演练、培训记录）</td>
+                <td><input type="radio" name="livestock2" value="是"></td>
+                <td><input type="radio" name="livestock2" value="否"></td>
+                <td><input type="radio" name="livestock2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>养殖场粪污处理区是否张贴警示标志和安全操作规程</td>
+                <td><input type="radio" name="livestock3" value="是"></td>
+                <td><input type="radio" name="livestock3" value="否"></td>
+                <td><input type="radio" name="livestock3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>沼气池进出料口是否盖好、主池井口处是否漏气，沼气输气管是否老化、破损、弯折，接头是否松动漏气</td>
+                <td><input type="radio" name="livestock4" value="是"></td>
+                <td><input type="radio" name="livestock4" value="否"></td>
+                <td><input type="radio" name="livestock4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否定期检查化粪池的进出口、连接管道堵塞情况</td>
+                <td><input type="radio" name="livestock5" value="是"></td>
+                <td><input type="radio" name="livestock5" value="否"></td>
+                <td><input type="radio" name="livestock5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>化粪池检查井和取样孔盖板是否保持活动，是否定期清掏</td>
+                <td><input type="radio" name="livestock6" value="是"></td>
+                <td><input type="radio" name="livestock6" value="否"></td>
+                <td><input type="radio" name="livestock6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>沼气池、化粪池是否委托专业队伍开展清理</td>
+                <td><input type="radio" name="livestock7" value="是"></td>
+                <td><input type="radio" name="livestock7" value="否"></td>
+                <td><input type="radio" name="livestock7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否回填妥善处理老旧废弃沼气池、化粪池</td>
+                <td><input type="radio" name="livestock8" value="是"></td>
+                <td><input type="radio" name="livestock8" value="否"></td>
+                <td><input type="radio" name="livestock8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>检查无害化处理池是否设置警示牌、围栏（墙）或加锁等安全措施，严防病死动物被盗挖、人员跌入处理池</td>
+                <td><input type="radio" name="livestock9" value="是"></td>
+                <td><input type="radio" name="livestock9" value="否"></td>
+                <td><input type="radio" name="livestock9" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>需要在养殖场生产区所进行维修等动火作业时，是否停止生产，并执行“蜀安焊”小程序动火作业申报审批制度，有企业负责人审核批准</td>
+                <td><input type="radio" name="livestock10" value="是"></td>
+                <td><input type="radio" name="livestock10" value="否"></td>
+                <td><input type="radio" name="livestock10" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>消防设施或设备配备齐全有效，并定期检查</td>
+                <td><input type="radio" name="livestock11" value="是"></td>
+                <td><input type="radio" name="livestock11" value="否"></td>
+                <td><input type="radio" name="livestock11" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>锅炉、压力容器等特种设备是否定期检定，通过安全检查，并取得安全合格证书</td>
+                <td><input type="radio" name="livestock12" value="是"></td>
+                <td><input type="radio" name="livestock12" value="否"></td>
+                <td><input type="radio" name="livestock12" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>配电柜、配电箱是否有警示标识，是否有触电保护装置安装和灭火器配备，坚决杜绝设备设施和线路严重老化</td>
+                <td><input type="radio" name="livestock13" value="是"></td>
+                <td><input type="radio" name="livestock13" value="否"></td>
+                <td><input type="radio" name="livestock13" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>养殖场生产区作业人员配备安全头盔、面罩、口罩等劳动保护用品</td>
+                <td><input type="radio" name="livestock14" value="是"></td>
+                <td><input type="radio" name="livestock14" value="否"></td>
+                <td><input type="radio" name="livestock14" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>生产区是否清洁，是否有易燃易爆危险品聚集、堆积，是否及时清扫、排除；垃圾合理分类处理，远离明火</td>
+                <td><input type="radio" name="livestock15" value="是"></td>
+                <td><input type="radio" name="livestock15" value="否"></td>
+                <td><input type="radio" name="livestock15" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>易制毒试剂、易燃易爆品、强酸强碱、亚硒酸钠等危险化学品等是否有安全管理措施，执行双人双锁保管制度，储存领用有记录，存放区是否有警示标识</td>
+                <td><input type="radio" name="livestock16" value="是"></td>
+                <td><input type="radio" name="livestock16" value="否"></td>
+                <td><input type="radio" name="livestock16" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>检查化验室的布局和分区是否发生不符合安全生产条件的变更，是否有能够满足样品理化分析和检验要求的通风柜、气瓶柜或气瓶固定装置以及避光、空调等设备设施</td>
+                <td><input type="radio" name="livestock17" value="是"></td>
+                <td><input type="radio" name="livestock17" value="否"></td>
+                <td><input type="radio" name="livestock17" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="meat-processing">
+    <div class="accordion-header">
+        <h3>畜禽屠宰企业安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>是否依法取得《生猪定点屠宰证》《动物防疫条件合格证》《排污许可证》《营业执照》</td>
+                <td><input type="radio" name="meat1" value="是"></td>
+                <td><input type="radio" name="meat1" value="否"></td>
+                <td><input type="radio" name="meat1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否建立企业负责人安全生产第一责任人制度</td>
+                <td><input type="radio" name="meat2" value="是"></td>
+                <td><input type="radio" name="meat2" value="否"></td>
+                <td><input type="radio" name="meat2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否制定并实施安全生产规章制度和操作规程</td>
+                <td><input type="radio" name="meat3" value="是"></td>
+                <td><input type="radio" name="meat3" value="否"></td>
+                <td><input type="radio" name="meat3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否制定并实施安全生产教育和培训计划</td>
+                <td><input type="radio" name="meat4" value="是"></td>
+                <td><input type="radio" name="meat4" value="否"></td>
+                <td><input type="radio" name="meat4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否制定企业生产安全事故应急预案并组织演练</td>
+                <td><input type="radio" name="meat5" value="是"></td>
+                <td><input type="radio" name="meat5" value="否"></td>
+                <td><input type="radio" name="meat5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否配备消防设施、器材并定期检验、维修</td>
+                <td><input type="radio" name="meat6" value="是"></td>
+                <td><input type="radio" name="meat6" value="否"></td>
+                <td><input type="radio" name="meat6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否对特种设备进行定期检验并张贴检验标志</td>
+                <td><input type="radio" name="meat7" value="是"></td>
+                <td><input type="radio" name="meat7" value="否"></td>
+                <td><input type="radio" name="meat7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否对危险化学品进行规范管理并设置警示标识</td>
+                <td><input type="radio" name="meat8" value="是"></td>
+                <td><input type="radio" name="meat8" value="否"></td>
+                <td><input type="radio" name="meat8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否对有限空间作业实行审批制度</td>
+                <td><input type="radio" name="meat10" value="是"></td>
+                <td><input type="radio" name="meat10" value="否"></td>
+                <td><input type="radio" name="meat10" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否定期对屠宰设施设备进行维护检修</td>
+                <td><input type="radio" name="meat11" value="是"></td>
+                <td><input type="radio" name="meat11" value="否"></td>
+                <td><input type="radio" name="meat11" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否对屠宰刀具进行消毒并上锁保管</td>
+                <td><input type="radio" name="meat12" value="是"></td>
+                <td><input type="radio" name="meat12" value="否"></td>
+                <td><input type="radio" name="meat12" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否对操作人员进行安全培训并持证上岗</td>
+                <td><input type="radio" name="meat13" value="是"></td>
+                <td><input type="radio" name="meat13" value="否"></td>
+                <td><input type="radio" name="meat13" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="biogas">
+    <div class="accordion-header">
+        <h3>户用沼气池安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>实地查看是否张贴沼气安全使用挂图或其他安全警示标志</td>
+                <td><input type="radio" name="biogas1" value="是"></td>
+                <td><input type="radio" name="biogas1" value="否"></td>
+                <td><input type="radio" name="biogas1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>实地查看沼气池出料口盖板是否缺失、破损</td>
+                <td><input type="radio" name="biogas2" value="是"></td>
+                <td><input type="radio" name="biogas2" value="否"></td>
+                <td><input type="radio" name="biogas2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>实地查看沼气灶具是否规范安装</td>
+                <td><input type="radio" name="biogas3" value="是"></td>
+                <td><input type="radio" name="biogas3" value="否"></td>
+                <td><input type="radio" name="biogas3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>实地查看沼气池、灶台边、输气管道0.5米内是否堆放易燃物</td>
+                <td><input type="radio" name="biogas4" value="是"></td>
+                <td><input type="radio" name="biogas4" value="否"></td>
+                <td><input type="radio" name="biogas4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>输气管距离电线是否大于0.1米</td>
+                <td><input type="radio" name="biogas5" value="是"></td>
+                <td><input type="radio" name="biogas5" value="否"></td>
+                <td><input type="radio" name="biogas5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>实地查看输气管道、尤其是接头开关处是否有沼气异味</td>
+                <td><input type="radio" name="biogas6" value="是"></td>
+                <td><input type="radio" name="biogas6" value="否"></td>
+                <td><input type="radio" name="biogas6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>输气软管是否有扭曲、折扁等异常情况</td>
+                <td><input type="radio" name="biogas7" value="是"></td>
+                <td><input type="radio" name="biogas7" value="否"></td>
+                <td><input type="radio" name="biogas7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>实地查看了解沼气池维护情况，是否存在违规入池现象</td>
+                <td><input type="radio" name="biogas8" value="是"></td>
+                <td><input type="radio" name="biogas8" value="否"></td>
+                <td><input type="radio" name="biogas8" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="biogas-project">
+    <div class="accordion-header">
+        <h3>沼气工程安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>是否在沼气设施周围设立禁烟、禁火、禁止攀爬等安全警示标志</td>
+                <td><input type="radio" name="biogas1" value="是"></td>
+                <td><input type="radio" name="biogas1" value="否"></td>
+                <td><input type="radio" name="biogas1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否张贴沼气安全生产制度</td>
+                <td><input type="radio" name="biogas2" value="是"></td>
+                <td><input type="radio" name="biogas2" value="否"></td>
+                <td><input type="radio" name="biogas2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>业主、管理人员是否掌握沼气安全生产知识</td>
+                <td><input type="radio" name="biogas3" value="是"></td>
+                <td><input type="radio" name="biogas3" value="否"></td>
+                <td><input type="radio" name="biogas3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>沼气池盖板是否缺失、破损等</td>
+                <td><input type="radio" name="biogas4" value="是"></td>
+                <td><input type="radio" name="biogas4" value="否"></td>
+                <td><input type="radio" name="biogas4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>预处理池、贮液池等易坠落处是否安装防护栏</td>
+                <td><input type="radio" name="biogas5" value="是"></td>
+                <td><input type="radio" name="biogas5" value="否"></td>
+                <td><input type="radio" name="biogas5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>沼气设施周围建筑是否规范安装避雷针等避雷设施</td>
+                <td><input type="radio" name="biogas6" value="是"></td>
+                <td><input type="radio" name="biogas6" value="否"></td>
+                <td><input type="radio" name="biogas6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>沼气灶具是否规范安装，灶具是否设置开关</td>
+                <td><input type="radio" name="biogas7" value="是"></td>
+                <td><input type="radio" name="biogas7" value="否"></td>
+                <td><input type="radio" name="biogas7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>沼气池、灶台边、输气管道0.5米内是否堆放易燃物</td>
+                <td><input type="radio" name="biogas8" value="是"></td>
+                <td><input type="radio" name="biogas8" value="否"></td>
+                <td><input type="radio" name="biogas8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>输气管距离电线是否大于0.1米</td>
+                <td><input type="radio" name="biogas9" value="是"></td>
+                <td><input type="radio" name="biogas9" value="否"></td>
+                <td><input type="radio" name="biogas9" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>输气管道、尤其是接头开关处是否有沼气异味</td>
+                <td><input type="radio" name="biogas10" value="是"></td>
+                <td><input type="radio" name="biogas10" value="否"></td>
+                <td><input type="radio" name="biogas10" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>输气软管是否有扭曲、折扁</td>
+                <td><input type="radio" name="biogas11" value="是"></td>
+                <td><input type="radio" name="biogas11" value="否"></td>
+                <td><input type="radio" name="biogas11" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>脱硫器等设施安装位置，是否有遮蔽物</td>
+                <td><input type="radio" name="biogas12" value="是"></td>
+                <td><input type="radio" name="biogas12" value="否"></td>
+                <td><input type="radio" name="biogas12" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否在明显位置配备灭火器，灭火器、防毒面具等消防设施是否在使用期限内，是否保持消防通道通畅</td>
+                <td><input type="radio" name="biogas13" value="是"></td>
+                <td><input type="radio" name="biogas13" value="否"></td>
+                <td><input type="radio" name="biogas13" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否安排人员定期巡查，对沼气设施进行检修维护</td>
+                <td><input type="radio" name="biogas14" value="是"></td>
+                <td><input type="radio" name="biogas14" value="否"></td>
+                <td><input type="radio" name="biogas14" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="facilities">
+    <div class="accordion-header">
+        <h3>设施农业领域安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>建设项目是否有改变性质用途</td>
+                <td><input type="radio" name="fac1" value="是"></td>
+                <td><input type="radio" name="fac1" value="否"></td>
+                <td><input type="radio" name="fac1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否存在液氨冷冻设备锅炉</td>
+                <td><input type="radio" name="fac2" value="是"></td>
+                <td><input type="radio" name="fac2" value="否"></td>
+                <td><input type="radio" name="fac2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否开展设施生产隐患排查（重点对老旧设施进行检查加固、维修，包括棚室骨架、温室后坡、后墙、山墙等，严防棚室墙体倒塌、结构破坏情况发生，消除安全隐患。在生产区域入口处（或现场）设置粘贴安全警示标牌标识。对作业场所的平面布局以及安全责任、操作规范、作业危险性、应急措施等事项进行告知，例如爬高堆肥漏电等风险警示牌、危险化学品安全告知牌、洪水淹没沟渠安全标识、突发事件人员紧急疏散标识等）</td>
+                <td><input type="radio" name="fac3" value="是"></td>
+                <td><input type="radio" name="fac3" value="否"></td>
+                <td><input type="radio" name="fac3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否开展设施火灾隐患排查（加强设施环境整治，及时清理棚室内部及周边易燃可燃物，定期检修消防器材，保障应急通道畅通，防止火灾发生。规模以上设施农业生产区域，要设置消防通道，配备一定数量的灭火器和消防设施设备，设置消防井和消防栓）</td>
+                <td><input type="radio" name="fac4" value="是"></td>
+                <td><input type="radio" name="fac4" value="否"></td>
+                <td><input type="radio" name="fac4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否设施用电隐患排查（针对园艺生产设施内湿度大，用电设备及导线容易老化破损的问题，对棚内供电线路、开关、插座、照明取暖、施肥机、补光灯等设备及漏电保护装置进行排查，及时消除安全隐患，倡导园艺设施生产购置采用防湿、防潮、防水的灯具、开关、插座，使用保护套线作为电源线，从技术上保证设施生产用电安全。严禁私拉乱接电线，严禁使用挂钩线、地爬线和绝缘不合格的导线；线路布设、机械安装、维护保养需要请专业人员进行）</td>
+                <td><input type="radio" name="fac5" value="是"></td>
+                <td><input type="radio" name="fac5" value="否"></td>
+                <td><input type="radio" name="fac5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否设施设备隐患排查。针对露天放置的电动机械如卷帘机、卷膜机采取防雨防潮措施，使用过程中发现有异响或异味、温度过高或冒烟时，应及时切断电源，需有专人看守使用。针对园艺生产灌溉线路布设时间长、维护保养不到位，存在年久失修的问题，对灌溉用机井、配电房、线路等进行全面检修，准确掌握排灌设备状况，及时处理各类设备故障，消除事故隐患。针对冬季临时加温措施热宝燃烧块、热风炉、暖风机、浴霸、大功率白炽灯、电暖器等存在安全隐患问题，加强设备检修，规范使用，加强使用过程中巡护，尤其是夜间巡护，棚内严禁住人</td>
+                <td><input type="radio" name="fac6" value="是"></td>
+                <td><input type="radio" name="fac6" value="否"></td>
+                <td><input type="radio" name="fac6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否规范投入品废弃物的管理</td>
+                <td><input type="radio" name="fac7" value="是"></td>
+                <td><input type="radio" name="fac7" value="否"></td>
+                <td><input type="radio" name="fac7" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="agriculture-construction">
+    <div class="accordion-header">
+        <h3>农业工程建设安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>监理单位在实施监理过程中是否对施工安全进行监督处置</td>
+                <td><input type="radio" name="agri1" value="是"></td>
+                <td><input type="radio" name="agri1" value="否"></td>
+                <td><input type="radio" name="agri1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>施工单位是否落实安全生产管理制度（包括安全生产会议制度、教育培训制度、检查制度、隐患排查治理制度等）</td>
+                <td><input type="radio" name="agri2" value="是"></td>
+                <td><input type="radio" name="agri2" value="否"></td>
+                <td><input type="radio" name="agri2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>施工单位是否落实安全生产措施（如安全生产费用使用、安全技术标准制定、机械设备管理办法执行等）</td>
+                <td><input type="radio" name="agri3" value="是"></td>
+                <td><input type="radio" name="agri3" value="否"></td>
+                <td><input type="radio" name="agri3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>施工单位安全生产人员配备、培训、岗位资格是否完备规范</td>
+                <td><input type="radio" name="agri4" value="是"></td>
+                <td><input type="radio" name="agri4" value="否"></td>
+                <td><input type="radio" name="agri4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>施工单位设备“定人定机定岗定责”等制度是否健全和落实</td>
+                <td><input type="radio" name="agri5" value="是"></td>
+                <td><input type="radio" name="agri5" value="否"></td>
+                <td><input type="radio" name="agri5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>塔式起重机、门式起重机、缆机、架桥机等起重机械是否按规定进行检测检验或检测检验不合格，其安装、拆卸（顶升）作业是否制定专项技术方案和安全技术措施，作业过程是否严格按方案和相关技术规程实施，是否按规定进行日常维护保养或违规使用</td>
+                <td><input type="radio" name="agri6" value="是"></td>
+                <td><input type="radio" name="agri6" value="否"></td>
+                <td><input type="radio" name="agri6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>脚手架、模板支撑体系是否按规定制定施工方案及审批，其搭设、验收、使用、拆除等是否符合相关规程和方案要求，钢管、扣件进场是否经检验</td>
+                <td><input type="radio" name="agri7" value="是"></td>
+                <td><input type="radio" name="agri7" value="否"></td>
+                <td><input type="radio" name="agri7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>高大模板施工是否按规定制定专项施工方案及审批，是否按施工方案和标准规程搭设，是否符合规程和方案要求</td>
+                <td><input type="radio" name="agri8" value="是"></td>
+                <td><input type="radio" name="agri8" value="否"></td>
+                <td><input type="radio" name="agri8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>深基坑施工是否按规定制定专项施工方案并进行审批，土方开挖、基坑支护、临边防护、变形监测是否符合相关规定及安全生产技术标准规范要求</td>
+                <td><input type="radio" name="agri9" value="是"></td>
+                <td><input type="radio" name="agri9" value="否"></td>
+                <td><input type="radio" name="agri9" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="leisure-agriculture">
+    <div class="accordion-header">
+        <h3>休闲农业安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>是否建立健全安全管理体系，实行“谁经营，谁负责”，维护运营安全秩序，防止各类安全事故发生</td>
+                <td><input type="radio" name="leisure1" value="是"></td>
+                <td><input type="radio" name="leisure1" value="否"></td>
+                <td><input type="radio" name="leisure1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>游览设施设备是否定期安全检查，包括游览安全提示、标识标牌、游客服务中心、停车场、游乐设施等</td>
+                <td><input type="radio" name="leisure2" value="是"></td>
+                <td><input type="radio" name="leisure2" value="否"></td>
+                <td><input type="radio" name="leisure2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>食品来源、卫生及存放、餐饮加工环境、就餐设施安全、厨房垃圾处理、消毒设备等是否安全管理</td>
+                <td><input type="radio" name="leisure3" value="是"></td>
+                <td><input type="radio" name="leisure3" value="否"></td>
+                <td><input type="radio" name="leisure3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>房屋安全性是否鉴定检查</td>
+                <td><input type="radio" name="leisure4" value="是"></td>
+                <td><input type="radio" name="leisure4" value="否"></td>
+                <td><input type="radio" name="leisure4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>应急设备或用品是否配备完整有效</td>
+                <td><input type="radio" name="leisure5" value="是"></td>
+                <td><input type="radio" name="leisure5" value="否"></td>
+                <td><input type="radio" name="leisure5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>紧急出口及逃生通道标识是否清晰</td>
+                <td><input type="radio" name="leisure6" value="是"></td>
+                <td><input type="radio" name="leisure6" value="否"></td>
+                <td><input type="radio" name="leisure6" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>入住登记系统及相关告知信息是否完备</td>
+                <td><input type="radio" name="leisure7" value="是"></td>
+                <td><input type="radio" name="leisure7" value="否"></td>
+                <td><input type="radio" name="leisure7" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>道路交通标志、指引、停车场、消防通道、灭火器、消防栓、紧急疏散标识等是否清晰</td>
+                <td><input type="radio" name="leisure8" value="是"></td>
+                <td><input type="radio" name="leisure8" value="否"></td>
+                <td><input type="radio" name="leisure8" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否完善应急预案，包括医疗设施、急救设备配备、应急预案等齐全，确保游客在紧急情况下能够得到及时救助</td>
+                <td><input type="radio" name="leisure9" value="是"></td>
+                <td><input type="radio" name="leisure9" value="否"></td>
+                <td><input type="radio" name="leisure9" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>是否配备清晰明了的宣传栏、安全宣传资料及安全告知信息等，保证游客和员工了解安全知识</td>
+                <td><input type="radio" name="leisure10" value="是"></td>
+                <td><input type="radio" name="leisure10" value="否"></td>
+                <td><input type="radio" name="leisure10" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="accordion" id="cold-storage">
+    <div class="accordion-header">
+        <h3>农产品冷藏保鲜设施安全检查</h3>
+    </div>
+    <div class="accordion-content">
+        <table class="check-table">
+            <tr>
+                <th style="width:60%">检查内容</th>
+                <th>是</th>
+                <th>否</th>
+                <th>不涉及</th>
+            </tr>
+            <tr>
+                <td>消防设施及标识是否醒目并熟练使用。冷藏保鲜设施配套的消防设施、冷库门安全锁等安全设施是否齐全，运行状态是否正常；冷藏设施操作要点及安全注意事项标识牌、安全出口等相关安全标识是否齐全，标识是否明晰醒目；作业环境及周边环境是否符合安全生产规范。冷藏设施管理人员对设施及标识是否应知应会。</td>
+                <td><input type="radio" name="cold1" value="是"></td>
+                <td><input type="radio" name="cold1" value="否"></td>
+                <td><input type="radio" name="cold1" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>安全生产制度是否健全。是否建立冷藏保鲜设施相关的安全生产责任制、安全生产规章制度及安全操作规程等安全生产制度，是否有相关的运行记录档案，冷藏设施管理人员对安全生产制度应知应会。</td>
+                <td><input type="radio" name="cold2" value="是"></td>
+                <td><input type="radio" name="cold2" value="否"></td>
+                <td><input type="radio" name="cold2" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>建设环节。重点检查冷库建设是否执行《四川省农产品仓储保鲜冷链设施建设技术方案》要求，在建项目施工是否符合建筑安全要求，保温材料施工过程中是否设置专职安全员，是否落实防火防护措施，特种设备安装调试是否符合特种设备安全管理要求等。</td>
+                <td><input type="radio" name="cold3" value="是"></td>
+                <td><input type="radio" name="cold3" value="否"></td>
+                <td><input type="radio" name="cold3" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>运营环节。重点检查冷藏保鲜设施运营单位是否建立安全生产责任制和安全操作规程，仓储货架是否定期检查，制冷机、管道、叉车、升降机等特种设备作业人员是否持证上岗，是否进行定期检查、维护，是否擅自拆除安全装置和防护设施，是否在检验有效期内，是否建立事故应急预案并定期演练，穿过库房隔热层的电气线路是否采取可靠的防火措施。</td>
+                <td><input type="radio" name="cold4" value="是"></td>
+                <td><input type="radio" name="cold4" value="否"></td>
+                <td><input type="radio" name="cold4" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>维修环节。重点检查是否落实动火作业审批制度，动火前是否确认动火分析需求和安全保障措施，动火现场负责人是否落实动火安全措施，操作人员是否持证上岗，规范佩戴个人防护用品，安全监护人是否全程监护。冷藏保鲜库及其附属设施维修是否符合安全要求，冷库特种设备改造或重大修理施工单位是否具有相应资质，是否按照规定进行特种设备改造或重大修理告知和监督检查。</td>
+                <td><input type="radio" name="cold5" value="是"></td>
+                <td><input type="radio" name="cold5" value="否"></td>
+                <td><input type="radio" name="cold5" value="不涉及"></td>
+            </tr>
+            <tr>
+                <td>拆除环节。重点检查拆除施工单位是否具备相应建筑施工安全资质，是否进行安全交底，是否对施工人员进行安全培训，特种作业人员是否持证上岗，动火作业是否规范，实施动火作业前是否对聚氨酯等保温材料及其他易燃、可燃物进行彻底清理，涉氨冷库的制冷设备管道拆除前是否进行吹扫置换，是否制定应急预案并组织演练，特种设备是否按照规定办理注销手续。</td>
+                <td><input type="radio" name="cold6" value="是"></td>
+                <td><input type="radio" name="cold6" value="否"></td>
+                <td><input type="radio" name="cold6" value="不涉及"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+        <!-- 安全隐患记录 -->
+        <div class="section-title">安全隐患记录</div>
+        <div class="quick-input">
+            <label class="required">是否存在重大安全隐患：</label>
+            <label><input type="radio" name="danger" value="是" required> 是</label>
+            <label><input type="radio" name="danger" value="否" required> 否</label>
+            <div id="danger-desc" style="margin-top:15px;display:none;">
+                <label class="required">隐患描述：</label>
+                <textarea rows="3" style="width:80%;" required></textarea>
+            </div>
+        </div>
+
+        <!-- 整改要求 -->
+        <div class="section-title">安全隐患整改要求</div>
+        <div class="quick-input">
+            <label class="required">整改要求：</label>
+            <textarea rows="4" style="width:80%;" required></textarea>
+            <div style="margin-top:15px;">
+                <label>整改期限：</label>
+                <input type="date">
+                <select style="margin-left:10px;">
+                    <option>立即整改</option>
+                    <option>3个工作日内</option>
+                    <option>7个工作日内</option>
+                </select>
+            </div>
+        </div>
+
+
+        <!-- 导出按钮 -->
+        <div class="d-flex justify-content-center gap-3 mt-5">
+            <button class="submit-btn btn" onclick="exportPDF()">导出PDF</button>
+            <button class="submit-btn btn" onclick="exportWord()">导出Word</button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化电子签名
+        const canvas = document.getElementById('signatureCanvas');
+        const signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgba(255, 255, 255, 0)',
+            penColor: 'rgb(0, 0, 0)'
+        });
+
+        // 照片上传处理
+        document.getElementById('photoUpload').addEventListener('change', function(e) {
+            const preview = document.querySelector('.photo-preview');
+            preview.innerHTML = '';
+            Array.from(e.target.files).slice(0,6).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-thumbnail';
+                    img.style.height = '100px';
+                    preview.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // 增强版标签选择
+        document.querySelectorAll('.tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const targetId = this.dataset.id;
+                const targetSection = document.getElementById(targetId);
+                targetSection.style.display = targetSection.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+
+        // PDF导出功能
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // 添加核心内容（需要遍历DOM提取数据）
+            // 此处添加具体内容处理逻辑
+            
+            doc.save('安全检查报告.pdf');
+        }
+
+        // Word导出功能
+        function exportWord() {
+            const content = `
+                <h1>安全检查报告</h1>
+                <!-- 此处添加动态内容 -->
+            `;
+            const blob = new Blob([content], { type: 'application/msword' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '安全检查报告.doc';
+            link.click();
+        }
+
+        // 初始化隐藏所有检查模块
+        document.querySelectorAll('.accordion').forEach(panel => {
+            panel.style.display = 'none';
+            panel.querySelector('.accordion-header').addEventListener('click', () => {
+                const content = panel.querySelector('.accordion-content');
+                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+    </script>
+
+    <!-- 引入 Bootstrap JS -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
